@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Geschenk-Generator</title>
+<style>
+:root { --bg:#f6f1e9; --ink:#1d1b19; --muted:#7a7268; --accent:#d6342c; --card:#fff; --line:#e4ddd2; }
+@media (prefers-color-scheme: dark) { :root { --bg:#161412; --ink:#f3ede4; --muted:#9c9388; --card:#211e1b; --line:#34302b; } }
+* { box-sizing: border-box; }
+body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.5 ui-rounded,"SF Pro Rounded","Segoe UI",system-ui,sans-serif; padding:24px 16px 64px; }
+main { max-width: 640px; margin: 0 auto; }
+h1 { margin:0 0 .25rem; letter-spacing:-.02em; }
+h2 { font-size:1.1rem; margin:2rem 0 .75rem; }
+.muted { color:var(--muted); font-size:.92rem; }
+.card { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:18px; }
+label { display:block; font-weight:600; font-size:.9rem; margin:14px 0 4px; }
+input, select, textarea { width:100%; font:inherit; color:inherit; background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:10px 12px; }
+textarea { min-height: 80px; resize: vertical; }
+.row { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+@media (max-width:520px){ .row { grid-template-columns:1fr; } }
+button, .btn { appearance:none; border:0; cursor:pointer; font:inherit; font-weight:700; padding:11px 18px; border-radius:999px; background:var(--ink); color:var(--bg); text-decoration:none; display:inline-block; }
+button.accent { background:var(--accent); color:#fff; }
+button.ghost { background:transparent; color:var(--muted); border:1px solid var(--line); font-weight:600; }
+.actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; }
+#result { display:none; margin-top:20px; }
+#result.show { display:block; }
+.link { word-break:break-all; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.9rem; background:var(--bg); border:2px dashed var(--line); border-radius:10px; padding:12px; margin:8px 0; }
+ol { padding-left: 1.2rem; margin:.5rem 0; } li { margin:.3rem 0; }
+code { background:var(--bg); padding:1px 6px; border-radius:6px; }
+table { width:100%; border-collapse:collapse; font-size:.92rem; }
+th, td { text-align:left; padding:8px 6px; border-bottom:1px solid var(--line); vertical-align:middle; }
+th { color:var(--muted); font-weight:600; font-size:.8rem; text-transform:uppercase; letter-spacing:.06em; }
+.del { background:none; color:var(--muted); padding:2px 8px; font-size:1.1rem; }
+.err { color:var(--accent); font-weight:600; margin-top:12px; display:none; }
+</style>
+</head>
+<body>
+<main>
+  <h1>🎁 Geschenk-Generator</h1>
+  <p class="muted">Alles läuft hier im Browser. Der Gutscheincode wird auf deinem Gerät verschlüsselt und nirgendwohin gesendet.</p>
+
+  <div class="card">
+    <div class="row">
+      <div><label for="to">Name</label><input id="to" placeholder="Hannes" autocomplete="off"></div>
+      <div><label for="slug">Adresse (/…, mit Zufalls-Token)</label><input id="slug" placeholder="hannes-k7x9q2mw4a" autocomplete="off"></div>
+    </div>
+    <div class="row">
+      <div><label for="code">Gutscheincode</label><input id="code" placeholder="XXXX-XXXX-XXXX" autocomplete="off"></div>
+      <div><label for="amount">Betrag</label><input id="amount" placeholder="50 €" autocomplete="off"></div>
+    </div>
+    <div class="row">
+      <div><label for="occasion">Anlass</label>
+        <select id="occasion">
+          <option value="Alles Gute zum Geburtstag! 🎂">Geburtstag</option>
+          <option value="Frohe Weihnachten! 🎄">Weihnachten</option>
+          <option value="Danke dir! 💛">Dankeschön</option>
+          <option value="Da ist etwas für dich.">Sonstiges</option>
+        </select></div>
+      <div><label for="expires">Läuft ab am</label><input id="expires" type="date"></div>
+    </div>
+    <label for="message">Nachricht</label>
+    <textarea id="message" placeholder="Such dir was Schönes aus!"></textarea>
+    <div class="row">
+      <div><label for="from">Von</label><input id="from" value="Von Fabian, Elena &amp; Romi ❤️"></div>
+      <div><label for="pin">PIN (optional)</label><input id="pin" autocomplete="off"></div>
+    </div>
+    <label for="url">Shop-Link</label>
+    <input id="url" value="https://www.uniqlo.com/de/de/">
+    <div class="actions"><button class="accent" id="go">Geschenk erstellen</button></div>
+    <p class="err" id="err"></p>
+  </div>
+
+  <section id="result" class="card">
+    <strong>Fertig! ✔</strong>
+    <p class="muted" style="margin:.25rem 0">Link für <span id="rName"></span> (den Teil nach dem # bitte nicht abschneiden):</p>
+    <div class="link" id="rLink"></div>
+    <div class="actions">
+      <button id="copyLink">Link kopieren</button>
+      <button class="ghost" id="copyHtml">HTML kopieren</button>
+      <button class="ghost" id="dl">index.html laden</button>
+    </div>
+    <h2 style="margin-top:1.5rem">So kommt es online</h2>
+    <ol>
+      <li>Im GitHub-Repo auf <b>Add file → Create new file</b> klicken.</li>
+      <li>Als Dateinamen <code id="rPath">hannes/index.html</code> eintippen (der Schrägstrich legt den Ordner an).</li>
+      <li>Das kopierte HTML einfügen und <b>Commit changes</b> klicken.</li>
+      <li>Nach ca. einer Minute ist die Seite live. Link verschicken, fertig.</li>
+    </ol>
+  </section>
+
+  <h2>Meine Geschenke</h2>
+  <div class="card">
+    <table>
+      <thead><tr><th>Name</th><th>Adresse</th><th>Läuft ab</th><th>Verschickt</th><th></th></tr></thead>
+      <tbody id="list"></tbody>
+    </table>
+    <p class="muted" id="empty">Noch nichts erstellt. Die Liste steht nur in diesem Browser und enthält weder Codes noch Links.</p>
+  </div>
+</main>
+
+<script>
+const TEMPLATE = "\u003c!doctype html>\n\u003chtml lang=\"de\">\n\u003chead>\n\u003cmeta charset=\"utf-8\">\n\u003cmeta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n\u003cmeta name=\"robots\" content=\"noindex, nofollow\">\n\u003ctitle>Ein Geschenk für {{TO}}\u003c/title>\n\u003clink rel=\"stylesheet\" href=\"/assets/style.css\">\n\u003c/head>\n\u003cbody>\n\u003ccanvas id=\"confetti\" aria-hidden=\"true\">\u003c/canvas>\n\u003cmain>\n  \u003ch1>Für {{TO}} 🎁\u003c/h1>\n  \u003cp class=\"sub\">{{SUBLINE}}\u003c/p>\n\n  \u003cbutton class=\"gift\" id=\"gift\" aria-label=\"Geschenk öffnen\">\n    \u003cspan class=\"box\">\u003c/span>\u003cspan class=\"lid\">\u003c/span>\u003cspan class=\"ribbon-v\">\u003c/span>\u003cspan class=\"bow\">\u003c/span>\n  \u003c/button>\n  \u003cp class=\"hint\" id=\"hint\">Tippe auf das Geschenk, um es zu öffnen.\u003c/p>\n  \u003cp class=\"sub expired\" id=\"expired\">Dieses Geschenk ist leider abgelaufen. 🕰️\u003cbr>Melde dich bei uns, falls du es nicht mehr einlösen konntest.\u003c/p>\n  \u003cp class=\"error\" id=\"error\">Das hat nicht geklappt – der Link scheint unvollständig zu sein. Bitte öffne ihn genau so, wie du ihn bekommen hast (inkl. des Teils nach dem „#“).\u003c/p>\n\n  \u003csection class=\"reveal\" id=\"reveal\">\n    \u003cdiv class=\"voucher\">\n      \u003cp class=\"amount\" id=\"amount\">\u003c/p>\n      \u003cp class=\"label\">Gutscheincode\u003c/p>\n      \u003cdiv class=\"code\" id=\"code\">\u003c/div>\n      \u003cdiv id=\"pinWrap\" style=\"display:none\">\n        \u003cp class=\"label\">PIN\u003c/p>\n        \u003cdiv class=\"code\" id=\"pin\">\u003c/div>\n      \u003c/div>\n      \u003cdiv class=\"actions\">\n        \u003cbutton class=\"btn\" id=\"copy\">Code kopieren\u003c/button>\n        \u003ca class=\"btn accent\" id=\"shop\" href=\"{{SHOP}}\" target=\"_blank\" rel=\"noopener\">Zum Shop\u003c/a>\n      \u003c/div>\n    \u003c/div>\n    \u003cp class=\"message\">{{MESSAGE}}\u003c/p>\n    \u003cp class=\"from\">{{FROM}}\u003c/p>\n    \u003cbutton class=\"btn ghost\" id=\"replay\">↺ Nochmal öffnen\u003c/button>\n  \u003c/section>\n\u003c/main>\n\u003cscript>window.GIFT_PAYLOAD = \"{{PAYLOAD}}\"; window.GIFT_EXPIRES = \"{{EXPIRES}}\";\u003c/script>\n\u003cscript src=\"/assets/gift.js\">\u003c/script>\n\u003c/body>\n\u003c/html>\n";
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+const b64u = (u8) => btoa(String.fromCharCode(...u8)).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+const iso = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+const BASE = "https://" + "ueberraschung.plastrotmann.de";
+
+// Standard: 30 Tage Laufzeit
+$("expires").value = iso(new Date(Date.now() + 30 * 864e5));
+
+// Zufalls-Token (10 Zeichen, ohne verwechselbare Zeichen) – macht die Adresse nicht erratbar
+const ALPHA = "abcdefghjkmnpqrstuvwxyz23456789";
+let token = "";
+const newToken = () => { token = Array.from(crypto.getRandomValues(new Uint8Array(10)), (b) => ALPHA[b % ALPHA.length]).join(""); };
+newToken();
+
+// Adresse automatisch aus Name + Token
+let slugTouched = false;
+$("slug").addEventListener("input", () => (slugTouched = true));
+$("to").addEventListener("input", () => {
+  if (slugTouched) return;
+  const base = $("to").value.toLowerCase()
+    .replace(/ä/g,"ae").replace(/ö/g,"oe").replace(/ü/g,"ue").replace(/ß/g,"ss")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
+  $("slug").value = base ? `${base}-${token}` : "";
+});
+
+// Liste (nur Metadaten, in localStorage dieses Browsers)
+const store = {
+  get() { try { return JSON.parse(localStorage.getItem("gifts") || "[]"); } catch { return []; } },
+  set(v) { try { localStorage.setItem("gifts", JSON.stringify(v)); } catch {} },
+};
+function renderList() {
+  const items = store.get();
+  $("empty").style.display = items.length ? "none" : "";
+  $("list").innerHTML = items.map((g, i) => `
+    <tr>
+      <td>${esc(g.to)}</td><td>/${esc(g.slug)}</td><td>${esc(g.expires || "–")}</td>
+      <td><input type="checkbox" data-sent="${i}" ${g.sent ? "checked" : ""} style="width:auto"></td>
+      <td><button class="del" data-del="${i}" title="Aus Liste entfernen">×</button></td>
+    </tr>`).join("");
+}
+$("list").addEventListener("click", (e) => {
+  const d = e.target.closest("[data-del]");
+  if (d) { const a = store.get(); a.splice(+d.dataset.del, 1); store.set(a); renderList(); }
+});
+$("list").addEventListener("change", (e) => {
+  if (e.target.dataset.sent !== undefined) { const a = store.get(); a[+e.target.dataset.sent].sent = e.target.checked; store.set(a); }
+});
+renderList();
+
+function fail(msg) { const el = $("err"); el.textContent = msg; el.style.display = "block"; }
+
+let lastHtml = "";
+$("go").addEventListener("click", async () => {
+  $("err").style.display = "none";
+  const to = $("to").value.trim(), slug = $("slug").value.trim(), code = $("code").value.trim();
+  if (!to || !slug || !code) return fail("Name, Adresse und Gutscheincode sind Pflicht.");
+  if (!/^[a-z0-9][a-z0-9-]{1,60}$/.test(slug)) return fail("Adresse: nur a–z, 0–9 und Bindestrich.");
+  if (["assets","tools","admin"].includes(slug)) return fail("Diese Adresse ist reserviert.");
+  if (!crypto?.subtle) return fail("Verschlüsselung nicht verfügbar. Bitte in einem aktuellen Browser öffnen (HTTPS oder lokale Datei).");
+
+  try {
+    const key = crypto.getRandomValues(new Uint8Array(16));
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const k = await crypto.subtle.importKey("raw", key, "AES-GCM", false, ["encrypt"]);
+    const plain = JSON.stringify({ code, amount: $("amount").value.trim(), pin: $("pin").value.trim(), url: "" });
+    const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, k, new TextEncoder().encode(plain)));
+    const all = new Uint8Array(iv.length + ct.length); all.set(iv); all.set(ct, iv.length);
+
+    const expires = $("expires").value;
+    lastHtml = TEMPLATE
+      .replaceAll("{{TO}}", esc(to))
+      .replaceAll("{{SUBLINE}}", esc($("occasion").value))
+      .replaceAll("{{MESSAGE}}", esc($("message").value.trim()))
+      .replaceAll("{{FROM}}", esc($("from").value.trim()))
+      .replaceAll("{{SHOP}}", esc($("url").value.trim() || "https://www.uniqlo.com/de/de/"))
+      .replaceAll("{{EXPIRES}}", expires)
+      .replaceAll("{{PAYLOAD}}", b64u(all));
+
+    $("rName").textContent = to;
+    $("rLink").textContent = `${BASE}/${slug}/#${b64u(key)}`;
+    $("rPath").textContent = `${slug}/index.html`;
+    $("result").classList.add("show");
+    $("result").scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+    const items = store.get().filter((g) => g.slug !== slug);
+    items.unshift({ to, slug, expires, sent: false });
+    store.set(items); renderList();
+    newToken(); slugTouched = false; $("slug").value = "";
+  } catch (e) { fail("Das hat nicht geklappt: " + e.message); }
+});
+
+async function copy(text, btn, label) {
+  try { await navigator.clipboard.writeText(text); btn.textContent = "Kopiert ✓"; }
+  catch { btn.textContent = "Kopieren nicht möglich"; }
+  setTimeout(() => (btn.textContent = label), 2000);
+}
+$("copyLink").addEventListener("click", (e) => copy($("rLink").textContent, e.target, "Link kopieren"));
+$("copyHtml").addEventListener("click", (e) => copy(lastHtml, e.target, "HTML kopieren"));
+$("dl").addEventListener("click", () => {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([lastHtml], { type: "text/html" }));
+  a.download = "index.html"; a.click();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,99 @@
+:root {
+  --bg: #f6f1e9;
+  --ink: #1d1b19;
+  --muted: #7a7268;
+  --accent: #d6342c;
+  --card: #ffffff;
+  --line: #e4ddd2;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #161412;
+    --ink: #f3ede4;
+    --muted: #9c9388;
+    --card: #211e1b;
+    --line: #34302b;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: ui-rounded, "SF Pro Rounded", "Segoe UI", system-ui, sans-serif;
+  display: grid;
+  place-items: center;
+  padding: 24px 16px;
+  min-height: 100vh;
+}
+main { width: 100%; max-width: 440px; text-align: center; }
+h1 { font-size: clamp(1.8rem, 7vw, 2.4rem); margin: 0 0 .4rem; letter-spacing: -.02em; }
+.sub { color: var(--muted); margin: 0 0 2rem; line-height: 1.5; }
+.message { white-space: pre-line; line-height: 1.6; margin: 0 0 2rem; }
+.from { color: var(--muted); font-size: .95rem; }
+
+/* Geschenkbox */
+.gift {
+  all: unset;
+  cursor: pointer;
+  display: block;
+  margin: 3.5rem auto 1.5rem;
+  width: 160px;
+  height: 160px;
+  position: relative;
+  transition: transform .2s;
+}
+.gift:hover { transform: scale(1.04) rotate(-2deg); }
+.gift:focus-visible { outline: 3px solid var(--accent); outline-offset: 8px; border-radius: 12px; }
+.gift .box { position: absolute; left: 10px; right: 10px; bottom: 0; height: 100px; background: var(--accent); border-radius: 6px; }
+.gift .lid { position: absolute; left: 0; right: 0; bottom: 92px; height: 36px; background: var(--accent); border-radius: 6px; filter: brightness(1.12); transition: transform .5s cubic-bezier(.3,1.6,.5,1); transform-origin: left bottom; }
+.gift .ribbon-v { position: absolute; left: calc(50% - 10px); width: 20px; bottom: 0; height: 128px; background: #fff; opacity: .9; }
+.gift .bow { position: absolute; left: calc(50% - 22px); bottom: 120px; width: 44px; height: 24px; border: 6px solid #fff; border-radius: 50% 50% 0 0; opacity: .9; transition: transform .5s; }
+.gift.open .lid { transform: translateY(-34px) rotate(-18deg); }
+.gift.open .bow { transform: translateY(-40px) rotate(-18deg); }
+.gift.open { pointer-events: none; }
+
+.hint { color: var(--muted); font-size: .9rem; }
+
+.reveal { display: none; }
+.reveal.show { display: block; animation: pop .5s ease both; }
+@keyframes pop { from { opacity: 0; transform: translateY(12px) scale(.97); } to { opacity: 1; transform: none; } }
+
+.voucher {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 24px 20px;
+  margin: 0 0 1rem;
+}
+.amount { font-size: 2.6rem; font-weight: 800; letter-spacing: -.03em; margin: 0; }
+.label { color: var(--muted); font-size: .8rem; text-transform: uppercase; letter-spacing: .12em; margin: 1rem 0 .4rem; }
+.code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 1.15rem;
+  word-break: break-all;
+  background: var(--bg);
+  border: 2px dashed var(--line);
+  border-radius: 12px;
+  padding: 14px 12px;
+  user-select: all;
+}
+.actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 1rem; }
+.btn {
+  appearance: none; border: 0; cursor: pointer; text-decoration: none;
+  font: inherit; font-weight: 700;
+  padding: 12px 20px; border-radius: 999px;
+  background: var(--ink); color: var(--bg);
+}
+.btn.accent { background: var(--accent); color: #fff; }
+.note { color: var(--muted); font-size: .9rem; line-height: 1.5; margin-top: 1rem; }
+.error { color: var(--accent); font-weight: 600; display: none; margin-top: 1rem; }
+.error.show { display: block; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+#confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+.btn.ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); margin-top: 1.5rem; font-weight: 600; }
+.btn.ghost:hover { color: var(--ink); border-color: var(--ink); }
+.gift.reset { transition: none; }
+.expired { display: none; margin-top: 2rem; }
+.expired.show { display: block; }
