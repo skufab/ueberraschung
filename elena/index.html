@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Ein Geschenk für Elena</title>
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+<canvas id="confetti" aria-hidden="true"></canvas>
+<main>
+  <h1>Für Elena 🎁</h1>
+  <p class="sub">Alles Gute zum Geburtstag! 🎂</p>
+
+  <button class="gift" id="gift" aria-label="Geschenk öffnen">
+    <span class="box"></span><span class="lid"></span><span class="ribbon-v"></span><span class="bow"></span>
+  </button>
+  <p class="hint" id="hint">Tippe auf das Geschenk, um es zu öffnen.</p>
+  <form class="pw" id="pwForm" style="display:none" autocomplete="off">
+    <p class="pwhint">RPP</p>
+    <div class="pwrow">
+      <input id="pw" type="text" placeholder="Passwort" aria-label="Passwort" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="go">
+      <button class="btn accent" type="submit">Öffnen</button>
+    </div>
+  </form>
+  <p class="sub expired" id="expired">Dieses Geschenk ist leider abgelaufen. 🕰️<br>Melde dich bei uns, falls du es nicht mehr einlösen konntest.</p>
+  <p class="error" id="error">Das hat nicht geklappt – der Link scheint unvollständig zu sein. Bitte öffne ihn genau so, wie du ihn bekommen hast (inkl. des Teils nach dem „#“).</p>
+
+  <section class="reveal" id="reveal">
+    <div class="voucher">
+      <p class="amount" id="amount"></p>
+      <p class="label">Gutscheincode</p>
+      <div class="code" id="code"></div>
+      <div id="pinWrap" style="display:none">
+        <p class="label">PIN</p>
+        <div class="code" id="pin"></div>
+      </div>
+      <div class="actions">
+        <button class="btn" id="copy">Code kopieren</button>
+        <a class="btn accent" id="shop" href="https://www.uniqlo.com/de/de/" target="_blank" rel="noopener">Zum Shop</a>
+      </div>
+    </div>
+    <p class="message">Alles Gutes :)</p>
+    <p class="from">Von Fabian, Elena &amp; Romi ❤️</p>
+    <button class="btn ghost" id="replay">↺ Nochmal öffnen</button>
+  </section>
+</main>
+<script>window.GIFT_PAYLOAD = "A3eAR4ER4AnNil19mVIoOg0eCsLTihm11LZJBsWc-Iy79C7s-sz9UkvtXNh8TROypdDqXeUqRHjf4uJf7QZ5xMl9MaHvJOjMEyGjoujTe0Vowp4lFYnRTJ9kSDt2K6NJ3UUrCX8leg"; window.GIFT_EXPIRES = "2026-10-02"; window.GIFT_MODE = "password";</script>
+<script src="/assets/gift.js"></script>
+</body>
+</html>
