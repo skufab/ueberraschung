@@ -1,5 +1,4 @@
-// Entschlüsselt den Gutschein im Browser. Der Schlüssel steht nur im #Fragment
-// des Links und wird nie an den Server gesendet.
+// Entschlüsselt den Gutschein im Browser. Passwort bzw. Geheimnis (#Fragment) verlassen das Gerät nie.
 (() => {
   const b64 = (s) => {
     s = s.replace(/-/g, "+").replace(/_/g, "/");
@@ -7,10 +6,17 @@
     return Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
   };
 
-  async function decrypt(payload, keyStr) {
+  // Passwort/Geheimnis vereinheitlichen: egal ob Groß-/Kleinschreibung, Leerzeichen, Satzzeichen oder Umlautpunkte.
+  const normalize = (s) => s.toLowerCase().replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+
+  // Format: salt(16) || iv(12) || ciphertext+tag. Schlüssel = PBKDF2-SHA256(Geheimnis, salt, 600000) -> AES-256-GCM.
+  async function decrypt(payload, secret) {
     const raw = b64(payload);
-    const key = await crypto.subtle.importKey("raw", b64(keyStr), "AES-GCM", false, ["decrypt"]);
-    const buf = await crypto.subtle.decrypt({ name: "AES-GCM", iv: raw.slice(0, 12) }, key, raw.slice(12));
+    const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(normalize(secret)), "PBKDF2", false, ["deriveKey"]);
+    const key = await crypto.subtle.deriveKey(
+      { name: "PBKDF2", salt: raw.slice(0, 16), iterations: 600000, hash: "SHA-256" },
+      base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+    const buf = await crypto.subtle.decrypt({ name: "AES-GCM", iv: raw.slice(16, 28) }, key, raw.slice(28));
     return JSON.parse(new TextDecoder().decode(buf));
   }
 
@@ -99,18 +105,44 @@
     setTimeout(() => $("reveal").classList.add("show"), 350);
   }
 
-  gift.addEventListener("click", async () => {
-    try {
-      if (!data) {
-        const key = location.hash.slice(1);
-        if (!key) throw new Error("no key");
-        data = await decrypt(window.GIFT_PAYLOAD, key);
+  const mode = window.GIFT_MODE === "password" ? "password" : "link";
+  const form = $("pwForm");
+
+  async function openWith(secret) {
+    data = await decrypt(window.GIFT_PAYLOAD, secret);
+    err.classList.remove("show");
+    // Adresse (Pfad + evtl. Geheimnis) aus der Adresszeile entfernen: es bleibt nur die Domain stehen.
+    try { history.replaceState(null, "", "/"); } catch {}
+    form.style.display = "none";
+    show(data);
+  }
+
+  if (mode === "password") {
+    form.style.display = "";
+    $("hint").textContent = "Gib das Passwort ein, um dein Geschenk zu öffnen.";
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const btn = form.querySelector("button");
+      btn.disabled = true;
+      try {
+        await openWith($("pw").value);
+      } catch {
+        err.textContent = "Das Passwort stimmt leider nicht. Versuch's noch mal 🙂";
+        err.classList.add("show");
+        $("pw").select();
       }
-      err.classList.remove("show");
-      // Link (Pfad + Schlüssel) aus der Adresszeile entfernen: es bleibt nur die Domain stehen.
-      try { history.replaceState(null, "", "/"); } catch {}
-      show(data);
-    } catch (e) {
+      btn.disabled = false;
+    });
+  }
+
+  gift.addEventListener("click", async () => {
+    if (data) return show(data); // „Nochmal öffnen“
+    if (mode === "password") return $("pw").focus();
+    try {
+      const key = decodeURIComponent(location.hash.slice(1));
+      if (!key) throw new Error("no key");
+      await openWith(key);
+    } catch {
       err.classList.add("show");
     }
   });
